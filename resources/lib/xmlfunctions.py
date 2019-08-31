@@ -307,7 +307,7 @@ class XMLFunctions():
                 else:
                     try:
                         hasher = hashlib.md5()
-                        hasher.update( xbmcvfs.File( hash[0] ).read() )
+                        hasher.update( xbmcvfs.File( hash[0] ).read().encode("utf-8") )
                         if hasher.hexdigest() != hash[1]:
                             log( "Hash does not match on file " + hash[0] )
                             log( "(" + hash[1] + " > " + hasher.hexdigest() + ")" )
@@ -800,7 +800,7 @@ class XMLFunctions():
                     visibleProperty.text = try_decode( property[1] )
                 else:
                     additionalproperty = xmltree.SubElement( newelement, "property" )
-                    additionalproperty.set( "name", property[0].decode( "utf-8" ) )
+                    additionalproperty.set( "name", property[0] )
                     additionalproperty.text = property[1]
                     allProps[ property[ 0 ] ] = additionalproperty
 
