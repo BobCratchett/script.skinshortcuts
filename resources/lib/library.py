@@ -743,8 +743,8 @@ class LibraryFunctions():
             # 5 = Media type (not folders...?)
 
             #make sure the path ends with a trailing slash te prevent weird kodi behaviour
-            if b"/" in nodes[key][2] and not nodes[key][2].endswith(b"/"):
-                nodes[key][2] += b"/"
+            if "/" in nodes[key][2] and not nodes[key][2].endswith("/"):
+                nodes[key][2] += "/"
 
             if nodes[ key ][ 3 ] == "folder":
                 item = self._create( [ "%s%s" % ( action, nodes[ key ][ 2 ] ), nodes[ key ][ 0 ], nodes[ key ][ 3 ], { "icon": nodes[ key ][ 1 ] } ] )
