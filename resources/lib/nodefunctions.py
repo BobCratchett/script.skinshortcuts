@@ -3,24 +3,30 @@ import os, sys, datetime, unicodedata, re, types
 import xbmc, xbmcaddon, xbmcgui, xbmcvfs, urllib
 import xml.etree.ElementTree as xmltree
 import hashlib, hashlist
-import cPickle as pickle
 from xml.dom.minidom import parse
 from traceback import print_exc
-from htmlentitydefs import name2codepoint
 from unidecode import unidecode
 from unicodeutils import try_decode
+import json as simplejson
 
-if sys.version_info < (2, 7):
-    import simplejson
+if sys.version_info.major == 3:
+    import pickle
+    from html.entities import name2codepoint
 else:
-    import json as simplejson
+    import cPickle as pickle
+    from htmlentitydefs import name2codepoint
 
 ADDON        = xbmcaddon.Addon()
-ADDONID      = ADDON.getAddonInfo('id').decode( 'utf-8' )
+ADDONID      = ADDON.getAddonInfo('id')
 KODIVERSION  = xbmc.getInfoLabel( "System.BuildVersion" ).split(".")[0]
 LANGUAGE     = ADDON.getLocalizedString
-CWD          = ADDON.getAddonInfo('path').decode("utf-8")
-DATAPATH     = os.path.join( xbmc.translatePath( "special://profile/addon_data/" ).decode('utf-8'), ADDONID )
+
+if sys.version_info.major == 3:
+    CWD      = ADDON.getAddonInfo('path')
+    DATAPATH = os.path.join(xbmc.translatePath("special://profile/"), "addon_data", ADDONID)
+else:
+    CWD      = ADDON.getAddonInfo('path').decode('utf-8')
+    DATAPATH = os.path.join(xbmc.translatePath("special://profile/").decode('utf-8' ), "addon_data", ADDONID)
 
 # character entity reference
 CHAR_ENTITY_REXP = re.compile('&(%s);' % '|'.join(name2codepoint))
@@ -61,7 +67,7 @@ class NodeFunctions():
             for dir in dirs:
                 self.parse_node( os.path.join( path, dir ), dir, nodes, prefix )
             for file in files:
-                self.parse_view( os.path.join( path, file.decode( "utf-8" ) ), nodes, origPath = "%s/%s" % ( prefix, file ), prefix = prefix )
+                self.parse_view( os.path.join( path, file ), nodes, origPath = "%s/%s" % ( prefix, file ), prefix = prefix )
         except:
             print_exc()
             return False
@@ -191,10 +197,10 @@ class NodeFunctions():
         else:
             return ""
 
-        customPath = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://profile".decode('utf-8') ), "library", pathEnd ) ) + "index.xml"
-        customFile = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://profile".decode('utf-8') ), "library", pathEnd ) )[:-1] + ".xml"
-        defaultPath = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://xbmc".decode('utf-8') ), "system", "library", pathEnd ) ) + "index.xml"
-        defaultFile = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://xbmc".decode('utf-8') ), "system", "library", pathEnd ) )[:-1] + ".xml"
+        customPath = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://profile" ), "library", pathEnd ) ) + "index.xml"
+        customFile = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://profile" ), "library", pathEnd ) )[:-1] + ".xml"
+        defaultPath = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://xbmc" ), "system", "library", pathEnd ) ) + "index.xml"
+        defaultFile = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://xbmc" ), "system", "library", pathEnd ) )[:-1] + ".xml"
 
         # Check whether the node exists - either as a parent node (with an index.xml) or a view node (append .xml)
         # in first custom video nodes, then default video nodes
@@ -212,8 +218,8 @@ class NodeFunctions():
         if path.endswith( "/" ): path = path[ :-1 ]
         path = path.rsplit( "/", 1 )[ 0 ]
 
-        customPath = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://profile".decode('utf-8') ), "library", pathEnd ) ) + "/index.xml"
-        defaultPath = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://xbmc".decode('utf-8') ), "system", "library", pathEnd ) ) + "/index.xml"
+        customPath = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://profile" ), "library", pathEnd ) ) + "/index.xml"
+        defaultPath = path.replace( pathStart, os.path.join( xbmc.translatePath( "special://xbmc" ), "system", "library", pathEnd ) ) + "/index.xml"
         nodeParent = None
         if xbmcvfs.exists( customPath ):
             nodeParent = customPath

@@ -4,7 +4,7 @@ import xbmc, xbmcgui, xbmcvfs, urllib
 import xml.etree.ElementTree as xmltree
 from xml.dom.minidom import parse
 from xml.sax.saxutils import escape as escapeXML
-import thread
+import _thread as thread
 from traceback import print_exc
 from unicodeutils import try_decode
 import calendar
@@ -25,9 +25,9 @@ else:
 ADDON        = sys.modules[ "__main__" ].ADDON
 ADDONID      = sys.modules[ "__main__" ].ADDONID
 CWD          = sys.modules[ "__main__" ].CWD
-DATAPATH     = os.path.join( xbmc.translatePath( "special://profile/addon_data/" ).decode('utf-8'), ADDONID )
-SKINPATH     = xbmc.translatePath( "special://skin/shortcuts/" ).decode('utf-8')
-DEFAULTPATH  = xbmc.translatePath( os.path.join( CWD, 'resources', 'shortcuts').encode("utf-8") ).decode("utf-8")
+DATAPATH     = os.path.join( xbmc.translatePath( "special://profile/addon_data/" ), ADDONID )
+SKINPATH     = xbmc.translatePath( "special://skin/shortcuts/" )
+DEFAULTPATH  = xbmc.translatePath( os.path.join( CWD, 'resources', 'shortcuts'))
 LANGUAGE     = ADDON.getLocalizedString
 KODIVERSION  = xbmc.getInfoLabel( "System.BuildVersion" ).split(".")[0]
 
@@ -52,7 +52,7 @@ def log(txt):
             pass
 
 def is_hebrew(text):
-    if type(text) != unicode:
+    if type(text) != str:
         text = text.decode('utf-8')
     for chr in text:
         if ord(chr) >= 1488 and ord(chr) <= 1514:
@@ -599,12 +599,12 @@ class GUI( xbmcgui.WindowXMLDialog ):
 
         # Enable any debug logging needed
         json_query = xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "id": 0, "method": "Settings.getSettings" }')
-        json_query = unicode(json_query, 'utf-8', errors='ignore')
+        #json_query = unicode(json_query, 'utf-8', errors='ignore')
         json_response = simplejson.loads(json_query)
 
         enabledSystemDebug = False
         enabledScriptDebug = False
-        if json_response.has_key('result') and json_response['result'].has_key('settings') and json_response['result']['settings'] is not None:
+        if 'result' in json_response and 'settings' in json_response['result'] and json_response['result']['settings'] is not None:
             for item in json_response['result']['settings']:
                 if item["id"] == "debug.showloginfo":
                     if item["value"] == False:
@@ -771,12 +771,16 @@ class GUI( xbmcgui.WindowXMLDialog ):
                             log( "Creating empty file - %s" %( target ) )
                             break
 
+                        # Removed logging here as trying to decode path[0] to unicode 8 isn't working
+                        # Ideally, earlier in the process we'd grab the paths as strings rather than
+                        # bytes
+
                         elif xbmcvfs.exists( path[0] ):
                             # The XML file exists
                             if path[1] == "Move":
                                 if path[0] != target:
                                     # Move the original to the target path
-                                    log( "Moving " + path[0] + " > " + target )
+                                    #log( "Moving " + path[0].decode + " > " + target )
                                     xbmcvfs.rename( path[0], target )
                             else:
                                 # We're copying the file (actually, we'll re-write the file without
@@ -789,8 +793,8 @@ class GUI( xbmcgui.WindowXMLDialog ):
 
                                 # Write it to the target
                                 DATA.indent( newtree.getroot() )
-                                newtree.write( target, encoding="utf-8" )
-                                log( "Copying " + path[0] + " > " + target )
+                                newtree.write( target )
+                                #log( "Copying " + path[0].decode + " > " + target )
 
                                 # We'll need to import it's default properties, so save the groupName
                                 copyDefaultProperties.append( groupName )
@@ -817,7 +821,7 @@ class GUI( xbmcgui.WindowXMLDialog ):
         currentProperties = []
 
         # Get previously loaded properties
-        path = os.path.join( DATAPATH , xbmc.getSkinDir().decode('utf-8') + ".properties" )
+        path = os.path.join( DATAPATH , xbmc.getSkinDir() + ".properties" )
         if xbmcvfs.exists( path ):
             # The properties file exists, load from it
             listProperties = eval( xbmcvfs.File( path ).read() )
@@ -861,7 +865,7 @@ class GUI( xbmcgui.WindowXMLDialog ):
 
         # Try to save the file
         try:
-            f = xbmcvfs.File( os.path.join( DATAPATH , xbmc.getSkinDir().decode('utf-8') + ".properties" ), 'w' )
+            f = xbmcvfs.File( os.path.join( DATAPATH , xbmc.getSkinDir() + ".properties" ), 'w' )
             f.write( repr( saveData ).replace( "],", "],\n" ) )
             f.close()
         except:
